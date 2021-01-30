@@ -1,4 +1,5 @@
 using AutoMapper;
+using Ecommerce.Api.Products.Tests;
 using ECommerce.Api.Products.Db;
 using ECommerce.Api.Products.Profiles;
 using ECommerce.Api.Products.Providers;
@@ -10,22 +11,24 @@ using Xunit;
 
 namespace Ecommerce.Api.Products.Test
 {
+    [Collection("Database collection")]
     public class ProductsServicesTests
     {
+        private readonly DatabaseFixture fixture;
+
+        public ProductsServicesTests(DatabaseFixture fixture)
+        {
+            this.fixture = fixture;
+        }
+
         [Fact]
         public async Task GetProductsReturnsAllProducts()
         {
-            var options = new DbContextOptionsBuilder<ProductsDbContext>()
-                .UseInMemoryDatabase(nameof(GetProductsReturnsAllProducts))
-                .Options;
-            var dbContext = new ProductsDbContext(options);
-            CreateProducts(dbContext);
-
             var productProfile = new ProductProfile();
             var configuration = new MapperConfiguration(cfg => cfg.AddProfile(productProfile));
             var mapper = new Mapper(configuration);
 
-            var productsProvider = new ProductsProvider(dbContext, null, mapper);
+            var productsProvider = new ProductsProvider(fixture.dbContext, null, mapper);
 
             var product = await productsProvider.GetProductsAsync();
 
@@ -37,17 +40,11 @@ namespace Ecommerce.Api.Products.Test
         [Fact]
         public async Task GetProductReturnsProductUsingValidId()
         {
-            var options = new DbContextOptionsBuilder<ProductsDbContext>()
-                .UseInMemoryDatabase(nameof(GetProductsReturnsAllProducts))
-                .Options;
-            var dbContext = new ProductsDbContext(options);
-            CreateProducts(dbContext);
-
             var productProfile = new ProductProfile();
             var configuration = new MapperConfiguration(cfg => cfg.AddProfile(productProfile));
             var mapper = new Mapper(configuration);
 
-            var productsProvider = new ProductsProvider(dbContext, null, mapper);
+            var productsProvider = new ProductsProvider(fixture.dbContext, null, mapper);
 
             var product = await productsProvider.GetProductAsync(1);
 
@@ -60,17 +57,11 @@ namespace Ecommerce.Api.Products.Test
         [Fact]
         public async Task GetProductReturnsProductUsingInValidId()
         {
-            var options = new DbContextOptionsBuilder<ProductsDbContext>()
-                .UseInMemoryDatabase(nameof(GetProductsReturnsAllProducts))
-                .Options;
-            var dbContext = new ProductsDbContext(options);
-            CreateProducts(dbContext);
-
             var productProfile = new ProductProfile();
             var configuration = new MapperConfiguration(cfg => cfg.AddProfile(productProfile));
             var mapper = new Mapper(configuration);
 
-            var productsProvider = new ProductsProvider(dbContext, null, mapper);
+            var productsProvider = new ProductsProvider(fixture.dbContext, null, mapper);
 
             var product = await productsProvider.GetProductAsync(-1);
 
@@ -80,19 +71,5 @@ namespace Ecommerce.Api.Products.Test
         }
 
 
-        private void CreateProducts(ProductsDbContext dbContext)
-        {
-            for (int i = 1; i <= 10; i++)
-            {
-                dbContext.Products.Add(new Product()
-                { 
-                    Id = i,
-                    Name = Guid.NewGuid().ToString(),
-                    Inventory = i + 10,
-                    Price = (decimal) (i * 3.14)
-                });
-            }
-            dbContext.SaveChanges();
-        }
     }
 }
